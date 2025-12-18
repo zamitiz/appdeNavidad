@@ -134,7 +134,7 @@ const App: React.FC = () => {
     const month = currentDate.getMonth();
     if (month === 11) {
         if (day === 24) return "¡Ya casi es hora! Santa se acerca.";
-        if (day >= 22) return "¡Tienes una sorpresa diaria abajo!";
+        if (day >= 22) return "¡Haz una postal navideña!";
     }
     return "Faltan pocos días... ¡Habrá una sorpresa desde el día 22!";
   };
