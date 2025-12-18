@@ -1,7 +1,7 @@
 {
   "name": "Navidad Mágica: Cuenta Regresiva",
   "short_name": "Navidad Mágica",
-  "description": "Vive la magia de la Navidad con sorpresas diarias, trivia y postales.",
+  "description": "Vive la magia de la Navidad con este conteo y muchas sorpresas.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f2027",
@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "hat.png",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
