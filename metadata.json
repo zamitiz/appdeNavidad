@@ -1,0 +1,7 @@
+{
+  "name": "Navidad Mágica",
+  "description": "Una experiencia interactiva navideña con sorpresas, trivia y postales digitales.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
