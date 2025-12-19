@@ -12,9 +12,6 @@ interface SimulatedDate {
   day: number;
 }
 
-// Variable global para capturar el evento de instalación fuera del ciclo de vida de React
-let caughtDeferredPrompt: any = null;
-
 const App: React.FC = () => {
   const [simulatedDate, setSimulatedDate] = useState<SimulatedDate | null>(null);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -23,7 +20,7 @@ const App: React.FC = () => {
   // PWA Install State
   const [showInstallBtn, setShowInstallBtn] = useState(false);
 
-  // States for different holidays
+  // Holiday states
   const [isChristmas, setIsChristmas] = useState(false);
   const [isNewYearDay, setIsNewYearDay] = useState(false);
   const [isNewYearPending, setIsNewYearPending] = useState(false);
@@ -31,47 +28,42 @@ const App: React.FC = () => {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Escuchar el evento de instalación de forma robusta
   useEffect(() => {
-    const handleBeforeInstall = (e: any) => {
-      e.preventDefault();
-      caughtDeferredPrompt = e;
-      setShowInstallBtn(true);
+    const checkInstallEligibility = () => {
+      if ((window as any).deferredPrompt) {
+        setShowInstallBtn(true);
+      }
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    // Revisar si ya está disponible
+    checkInstallEligibility();
 
-    // Si el evento ya se capturó antes del montaje
-    if (caughtDeferredPrompt) {
-      setShowInstallBtn(true);
-    }
-
+    // Suscribirse al evento personalizado desde index.html
+    window.addEventListener('pwa-install-ready', checkInstallEligibility);
     window.addEventListener('appinstalled', () => {
       setShowInstallBtn(false);
-      caughtDeferredPrompt = null;
+      (window as any).deferredPrompt = null;
     });
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwa-install-ready', checkInstallEligibility);
     };
   }, []);
 
-  const handleInstallClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!caughtDeferredPrompt) return;
+  const handleInstallClick = async () => {
+    const promptEvent = (window as any).deferredPrompt;
+    if (!promptEvent) return;
     
-    try {
-      caughtDeferredPrompt.prompt();
-      const { outcome } = await caughtDeferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShowInstallBtn(false);
-        caughtDeferredPrompt = null;
-      }
-    } catch (err) {
-      console.error("Error en la instalación:", err);
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBtn(false);
+      (window as any).deferredPrompt = null;
     }
   };
 
-  // Audio Control Logic
+  // Lógica de Audio
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -79,10 +71,7 @@ const App: React.FC = () => {
     const isCelebration = isChristmas || isNewYearDay;
     if (isCelebration && isPlaying) {
       audio.volume = 0.4;
-      audio.play().catch(() => {
-        setIsPlaying(false);
-        console.log("Autoplay bloqueado por el navegador");
-      });
+      audio.play().catch(() => setIsPlaying(false));
     } else if (!isCelebration) {
       audio.pause();
       audio.currentTime = 0;
@@ -123,9 +112,9 @@ const App: React.FC = () => {
 
         let target: Date;
         if (checkIsNewYearPending) {
-            target = new Date(`January 1, ${year + 1} 00:00:00`);
+            target = new Date(year + 1, 0, 1, 0, 0, 0);
         } else {
-             target = new Date(`December 25, ${year} 00:00:00`);
+             target = new Date(year, 11, 25, 0, 0, 0);
         }
 
         const diff = target.getTime() - now.getTime();
@@ -166,18 +155,18 @@ const App: React.FC = () => {
   const isCelebrationDay = isChristmas || isNewYearDay;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-xmas-dark via-xmas-blue to-xmas-light flex flex-col items-center justify-center text-white overflow-hidden relative selection:bg-xmas-gold selection:text-black">
+    <div className="min-h-screen bg-xmas-dark bg-gradient-to-b from-xmas-dark via-xmas-blue to-xmas-light flex flex-col items-center justify-center text-white overflow-hidden relative">
       <Snowfall />
       
       <audio ref={audioRef} loop crossOrigin="anonymous">
           <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kevin_MacLeod/Jazz_Sampler/Kevin_MacLeod_-_Jingle_Bells.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* PWA Install Button */}
+      {/* Botón de Instalación corregido */}
       {showInstallBtn && (
         <button 
           onClick={handleInstallClick}
-          className="fixed top-6 right-6 z-[60] bg-xmas-gold text-xmas-dark px-5 py-2.5 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.4)] flex items-center gap-2 animate-bounce-slow hover:scale-105 active:scale-95 transition-transform"
+          className="fixed top-6 right-6 z-[60] bg-xmas-gold text-xmas-dark px-5 py-2.5 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.5)] flex items-center gap-2 animate-bounce-slow hover:scale-105 transition-transform"
         >
           <Download size={18} /> Instalar App
         </button>
@@ -186,27 +175,26 @@ const App: React.FC = () => {
       <main 
         className={`z-10 bg-white/10 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-2xl max-w-[90%] w-[500px] flex flex-col items-center text-center transform transition-all duration-500 my-10 ${
           isCelebrationDay 
-            ? "border-4 border-xmas-gold shadow-[0_0_60px_rgba(255,215,0,0.5)] scale-105" 
-            : "border border-white/20 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+            ? "border-4 border-xmas-gold shadow-[0_0_60px_rgba(255,215,0,0.4)] scale-105" 
+            : "border border-white/20"
         }`}
       >
-        
         <header className="mb-4 w-full flex flex-col items-center">
           <h1 className="font-christmas text-6xl md:text-7xl text-xmas-gold drop-shadow-[0_0_10px_rgba(255,215,0,0.5)] animate-pulse-slow">
             {getMainTitle()}
           </h1>
           
           {isCelebrationDay && (
-            <>
-              <Sparkles className="inline-block text-xmas-gold animate-spin-slow mb-4" size={40} />
+            <div className="flex flex-col items-center gap-4 mt-2">
+              <Sparkles className="text-xmas-gold animate-spin-slow" size={40} />
               <button 
                 onClick={toggleMusic}
-                className="mt-2 flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-sm font-bold border border-white/20 shadow-lg hover:scale-105"
+                className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-sm font-bold border border-white/20 shadow-lg"
               >
                 {isPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 {isPlaying ? "Pausar Melodía" : "Reproducir Melodía"}
               </button>
-            </>
+            </div>
           )}
         </header>
 
@@ -217,11 +205,10 @@ const App: React.FC = () => {
         </h2>
 
         {!isNewYearPending && !isNewYearDay && <SurpriseSection currentDate={currentDate} />}
-
       </main>
 
       <footer className="z-10 py-6 text-white/40 text-xs text-center">
-        Versión App 1.1 • Creado con espíritu navideño
+        Versión App 1.2 • Espíritu Navideño
       </footer>
 
       <DebugControls onSimulate={setSimulatedDate} currentSimulatedDate={simulatedDate} />
