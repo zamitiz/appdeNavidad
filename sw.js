@@ -2,7 +2,7 @@
 const CACHE_NAME = 'xmas-cache-v4';
 const ASSETS_TO_CACHE = [
   './index.html',
-  './icon.svg',
+  './hat.png',
   './manifest.json',
   'https://cdn.tailwindcss.com'
 ];
