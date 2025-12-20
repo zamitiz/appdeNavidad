@@ -131,8 +131,12 @@ const App: React.FC = () => {
           <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kevin_MacLeod/Jazz_Sampler/Kevin_MacLeod_-_Jingle_Bells.mp3" type="audio/mpeg" />
       </audio>
 
-      <div className="fixed top-6 right-6 z-[60] flex flex-col gap-3 items-end">
-        <button onClick={handleShareApp} className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full backdrop-blur border border-white/20 shadow-lg">
+      <div className="fixed top-6 right-6 z-[60]">
+        <button 
+          onClick={handleShareApp} 
+          className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full backdrop-blur border border-white/20 shadow-lg"
+          aria-label="Compartir aplicación"
+        >
           <Share2 size={20} />
         </button>
       </div>
@@ -144,21 +148,24 @@ const App: React.FC = () => {
           </h1>
           {(isChristmas || isNewYearDay) && (
             <div className="flex flex-col items-center gap-4 mt-2">
-              <Sparkles className="text-xmas-gold animate-spin-slow" size={40} />
-              <button onClick={toggleMusic} className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-sm font-bold border border-white/20 shadow-lg">
-                {isPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              <Sparkles className="text-xmas-gold animate-spin-slow" size={40} aria-hidden="true" />
+              <button onClick={toggleMusic} className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-sm font-bold border border-white/20 shadow-lg" aria-label={isPlaying ? "Pausar música" : "Reproducir música"}>
+                {isPlaying ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}
                 {isPlaying ? "Pausar Melodía" : "Reproducir Melodía"}
               </button>
             </div>
           )}
         </header>
 
-        <CountdownTimer timeLeft={timeLeft} />
-        <h2 className="text-xl md:text-2xl font-light text-gray-200 mt-4 tracking-wide">{getStatusMessage()}</h2>
+        <section aria-label="Cuenta regresiva">
+            <CountdownTimer timeLeft={timeLeft} />
+            <h2 className="text-xl md:text-2xl font-light text-slate-200 mt-4 tracking-wide">{getStatusMessage()}</h2>
+        </section>
+        
         {!isNewYearPending && !isNewYearDay && <SurpriseSection currentDate={currentDate} />}
       </main>
 
-      <footer className="z-10 py-6 flex flex-col items-center gap-2">
+      <footer className="z-10 py-6">
         <a href="privacy.html" className="text-white/60 hover:text-xmas-gold text-xs underline decoration-white/20">Política de Privacidad</a>
       </footer>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, Share2, Download, RefreshCw, Sparkles, Smile, Type, Trash2, MessageCircle } from 'lucide-react';
 
@@ -25,11 +26,16 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
   const [selectedFrame, setSelectedFrame] = useState<number>(0);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [customMessage, setCustomMessage] = useState("");
-  const [senderName, setSenderName] = useState("");
+  const [senderName, setSenderName] = useState(() => localStorage.getItem('postcardSenderName') || "");
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const finalCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Save sender name to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('postcardSenderName', senderName);
+  }, [senderName]);
 
   // Feature Unlock Logic
   const currentDay = currentDate.getDate();
@@ -235,7 +241,7 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
   };
 
   const reset = () => {
-    setImageSrc(null); setStep('capture'); setStickers([]); setCustomMessage(""); setSenderName("");
+    setImageSrc(null); setStep('capture'); setStickers([]); setCustomMessage("");
     stopCamera();
   };
 
@@ -255,7 +261,7 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
             {isCameraOpen ? (
                 <div className="relative w-full max-w-sm aspect-[3/4] bg-black rounded-lg overflow-hidden border-2 border-blue-500 shadow-lg">
                     <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover transform -scale-x-100" />
-                    <button onClick={capturePhoto} className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center hover:scale-110 transition-transform">
+                    <button onClick={capturePhoto} aria-label="Tomar foto" className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center hover:scale-110 transition-transform">
                         <div className="w-12 h-12 bg-blue-600 rounded-full"></div>
                     </button>
                 </div>
@@ -284,11 +290,11 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
             <div className="w-full space-y-4">
                 <div>
                     <p className="text-xs uppercase tracking-widest text-blue-300 mb-2 font-bold flex items-center gap-2">
-                        <Sparkles size={14} /> Marcos Festivos
+                        <Sparkles size={14} aria-hidden="true" /> Marcos Festivos
                     </p>
                     <div className="flex gap-3 overflow-x-auto pb-2">
                         {FRAMES.map((frame, idx) => (
-                            <button key={idx} onClick={() => setSelectedFrame(idx)} title={frame.name} className={`w-10 h-10 rounded-full border-2 flex-shrink-0 transition-all ${selectedFrame === idx ? 'scale-110 border-white ring-2 ring-blue-400 shadow-[0_0_10px_white]' : 'border-slate-500 opacity-70'}`} style={{ backgroundColor: frame.color }} />
+                            <button key={idx} onClick={() => setSelectedFrame(idx)} aria-label={`Seleccionar marco ${frame.name}`} title={frame.name} className={`w-10 h-10 rounded-full border-2 flex-shrink-0 transition-all ${selectedFrame === idx ? 'scale-110 border-white ring-2 ring-blue-400 shadow-[0_0_10px_white]' : 'border-slate-500 opacity-70'}`} style={{ backgroundColor: frame.color }} />
                         ))}
                     </div>
                 </div>
@@ -297,7 +303,7 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
                     <div className="animate-fade-in-up delay-100">
                         <div className="flex justify-between items-center mb-2">
                             <p className="text-xs uppercase tracking-widest text-blue-300 font-bold flex items-center gap-2">
-                                <Smile size={14} /> Stickers
+                                <Smile size={14} aria-hidden="true" /> Stickers
                             </p>
                             {stickers.length > 0 && (
                                 <button onClick={clearStickers} className="text-xs text-red-300 flex items-center gap-1 hover:text-red-200">
@@ -305,9 +311,9 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
                                 </button>
                             )}
                         </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-blue-500">
+                        <div className="flex flex-wrap gap-2 pb-2">
                             {STICKER_LIBRARY.map((icon, idx) => (
-                                <button key={idx} onClick={() => addSticker(icon)} className="text-2xl hover:scale-125 transition-transform p-1">{icon}</button>
+                                <button key={idx} onClick={() => addSticker(icon)} aria-label={`Añadir sticker ${icon}`} className="text-2xl hover:scale-125 transition-transform p-1">{icon}</button>
                             ))}
                         </div>
                     </div>
@@ -316,7 +322,7 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
                 {isFullyUnlocked && (
                     <div className="animate-fade-in-up delay-200 space-y-2">
                         <p className="text-xs uppercase tracking-widest text-blue-300 font-bold flex items-center gap-2">
-                            <Type size={14} /> Mensaje y Firma
+                            <Type size={14} aria-hidden="true" /> Mensaje y Firma
                         </p>
                         <input type="text" placeholder="Mensaje Navideño" value={customMessage} onChange={(e) => setCustomMessage(e.target.value)} maxLength={25} className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                         <input type="text" placeholder="Tu Nombre" value={senderName} onChange={(e) => setSenderName(e.target.value)} maxLength={20} className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
@@ -328,7 +334,7 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
                  <button onClick={downloadImage} className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg transition-transform hover:-translate-y-1">
                     <Download size={18} /> Guardar Postal
                 </button>
-                 <button onClick={reset} className="w-12 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center justify-center" title="Reiniciar"><RefreshCw size={18} /></button>
+                 <button onClick={reset} className="w-12 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center justify-center" aria-label="Reiniciar postal" title="Reiniciar"><RefreshCw size={18} /></button>
             </div>
         </div>
       )}
@@ -336,7 +342,7 @@ const DigitalPostcard: React.FC<DigitalPostcardProps> = ({ currentDate, isChrist
       {step === 'share' && (
         <div className="flex flex-col items-center gap-4 py-6">
             <div className="bg-green-500/20 text-green-200 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 animate-bounce-slow">
-                <Sparkles size={16} /> ¡Postal Navideña Lista!
+                <Sparkles size={16} aria-hidden="true" /> ¡Postal Navideña Lista!
             </div>
             <p className="text-center text-sm text-slate-300">Imagen guardada correctamente.</p>
             <button onClick={shareImage} className="w-full bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-full font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all hover:scale-105"><Share2 size={20} /> Compartir</button>

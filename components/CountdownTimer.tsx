@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TimeLeft } from '../types';
 
@@ -10,7 +11,7 @@ const TimeBox: React.FC<{ value: number; label: string }> = ({ value, label }) =
     <span className="text-3xl sm:text-5xl font-bold text-white tabular-nums drop-shadow-md">
       {value < 10 ? `0${value}` : value}
     </span>
-    <span className="text-xs sm:text-sm text-gray-300 uppercase tracking-widest mt-1">
+    <span className="text-xs sm:text-sm text-slate-300 uppercase tracking-widest mt-1">
       {label}
     </span>
   </div>
