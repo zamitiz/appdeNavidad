@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="hat.png">
+    <link rel="apple-touch-icon" href="icon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,9 +68,9 @@
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.2.0",
-    "react-dom": "https://esm.sh/react-dom@19.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.475.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
@@ -88,24 +88,34 @@
         </div>
     </div>
 
-    <!-- Pantalla de error si falla la carga -->
     <div id="boot-error">
         <h1 style="color: #ffd700; font-size: 1.5rem; margin-bottom: 1rem;">¡Ups! El espíritu navideño se distrajo</h1>
         <p style="color: #cbd5e1; margin-bottom: 2rem;">La aplicación está tardando más de lo normal en cargar.</p>
-        <button onclick="clearAndReload()" style="background: #ffd700; color: #0f2027; border: none; padding: 0.75rem 1.5rem; rounded: 9999px; font-weight: bold; border-radius: 50px; cursor: pointer;">
+        <button onclick="clearAndReload()" style="background: #ffd700; color: #0f2027; border: none; padding: 0.75rem 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer;">
             Reiniciar Aplicación
         </button>
     </div>
 
     <script>
-      // Detector de bloqueo: si en 6 segundos no se ha montado React, mostramos el error
+      // Registro de SW optimizado
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js', { scope: './' })
+            .then(reg => {
+              console.log('Service Worker registrado:', reg.scope);
+            })
+            .catch(err => {
+              console.error('Fallo al registrar Service Worker:', err);
+            });
+        });
+      }
+
       const bootTimer = setTimeout(() => {
         const root = document.getElementById('root');
-        // Si el loader sigue ahí (no ha sido reemplazado por React)
         if (root && root.innerHTML.includes('Cargando Navidad')) {
           document.getElementById('boot-error').style.display = 'flex';
         }
-      }, 6000);
+      }, 8000);
 
       function clearAndReload() {
         if ('serviceWorker' in navigator) {
@@ -113,27 +123,11 @@
             for(let registration of registrations) {
               registration.unregister();
             }
-            window.location.reload(true);
+            window.location.reload();
           });
         } else {
-          window.location.reload(true);
+          window.location.reload();
         }
-      }
-
-      // Registro de SW
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').then(reg => {
-            reg.onupdatefound = () => {
-              const installingWorker = reg.installing;
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  window.location.reload();
-                }
-              };
-            };
-          });
-        });
       }
 
       window.addEventListener('beforeinstallprompt', (e) => {
