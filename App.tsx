@@ -5,10 +5,10 @@ import Snowfall from './components/Snowfall';
 import CountdownTimer from './components/CountdownTimer';
 import SurpriseSection from './components/SurpriseSection';
 import DebugControls from './components/DebugControls';
-import { Sparkles, Volume2, VolumeX, Download } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Download, Share2 } from 'lucide-react';
 
 interface SimulatedDate {
-  month: number; // 0-11
+  month: number;
   day: number;
 }
 
@@ -16,45 +16,29 @@ const App: React.FC = () => {
   const [simulatedDate, setSimulatedDate] = useState<SimulatedDate | null>(null);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  
-  // PWA Install State
   const [showInstallBtn, setShowInstallBtn] = useState(false);
-
-  // Holiday states
   const [isChristmas, setIsChristmas] = useState(false);
   const [isNewYearDay, setIsNewYearDay] = useState(false);
   const [isNewYearPending, setIsNewYearPending] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Escuchar el evento de instalación de forma robusta
   useEffect(() => {
     const checkInstallEligibility = () => {
-      if ((window as any).deferredPrompt) {
-        setShowInstallBtn(true);
-      }
+      if ((window as any).deferredPrompt) setShowInstallBtn(true);
     };
-
-    // Revisar si ya está disponible
     checkInstallEligibility();
-
-    // Suscribirse al evento personalizado desde index.html
     window.addEventListener('pwa-install-ready', checkInstallEligibility);
     window.addEventListener('appinstalled', () => {
       setShowInstallBtn(false);
       (window as any).deferredPrompt = null;
     });
-
-    return () => {
-      window.removeEventListener('pwa-install-ready', checkInstallEligibility);
-    };
+    return () => window.removeEventListener('pwa-install-ready', checkInstallEligibility);
   }, []);
 
   const handleInstallClick = async () => {
     const promptEvent = (window as any).deferredPrompt;
     if (!promptEvent) return;
-    
     promptEvent.prompt();
     const { outcome } = await promptEvent.userChoice;
     if (outcome === 'accepted') {
@@ -63,11 +47,23 @@ const App: React.FC = () => {
     }
   };
 
-  // Lógica de Audio
+  const handleShareApp = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Navidad Mágica',
+          text: '¡Mira esta cuenta regresiva para Navidad y crea tus propias postales! 🎄✨',
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log('Error compartiendo:', err);
+      }
+    }
+  };
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    
     const isCelebration = isChristmas || isNewYearDay;
     if (isCelebration && isPlaying) {
       audio.volume = 0.4;
@@ -85,9 +81,7 @@ const App: React.FC = () => {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
   };
 
@@ -152,45 +146,33 @@ const App: React.FC = () => {
     return "Navidad";
   };
 
-  const isCelebrationDay = isChristmas || isNewYearDay;
-
   return (
     <div className="min-h-screen bg-xmas-dark bg-gradient-to-b from-xmas-dark via-xmas-blue to-xmas-light flex flex-col items-center justify-center text-white overflow-hidden relative">
       <Snowfall />
-      
       <audio ref={audioRef} loop crossOrigin="anonymous">
           <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kevin_MacLeod/Jazz_Sampler/Kevin_MacLeod_-_Jingle_Bells.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Botón de Instalación corregido */}
-      {showInstallBtn && (
-        <button 
-          onClick={handleInstallClick}
-          className="fixed top-6 right-6 z-[60] bg-xmas-gold text-xmas-dark px-5 py-2.5 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.5)] flex items-center gap-2 animate-bounce-slow hover:scale-105 transition-transform"
-        >
-          <Download size={18} /> Instalar App
+      <div className="fixed top-6 right-6 z-[60] flex flex-col gap-3 items-end">
+        {showInstallBtn && (
+          <button onClick={handleInstallClick} className="bg-xmas-gold text-xmas-dark px-5 py-2.5 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.5)] flex items-center gap-2 animate-bounce-slow hover:scale-105 transition-transform">
+            <Download size={18} /> Instalar App
+          </button>
+        )}
+        <button onClick={handleShareApp} className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full backdrop-blur border border-white/20 shadow-lg">
+          <Share2 size={20} />
         </button>
-      )}
+      </div>
 
-      <main 
-        className={`z-10 bg-white/10 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-2xl max-w-[90%] w-[500px] flex flex-col items-center text-center transform transition-all duration-500 my-10 ${
-          isCelebrationDay 
-            ? "border-4 border-xmas-gold shadow-[0_0_60px_rgba(255,215,0,0.4)] scale-105" 
-            : "border border-white/20"
-        }`}
-      >
+      <main className={`z-10 bg-white/10 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-2xl max-w-[90%] w-[500px] flex flex-col items-center text-center transform transition-all duration-500 my-10 ${isChristmas || isNewYearDay ? "border-4 border-xmas-gold shadow-[0_0_60px_rgba(255,215,0,0.4)] scale-105" : "border border-white/20"}`}>
         <header className="mb-4 w-full flex flex-col items-center">
           <h1 className="font-christmas text-6xl md:text-7xl text-xmas-gold drop-shadow-[0_0_10px_rgba(255,215,0,0.5)] animate-pulse-slow">
             {getMainTitle()}
           </h1>
-          
-          {isCelebrationDay && (
+          {(isChristmas || isNewYearDay) && (
             <div className="flex flex-col items-center gap-4 mt-2">
               <Sparkles className="text-xmas-gold animate-spin-slow" size={40} />
-              <button 
-                onClick={toggleMusic}
-                className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-sm font-bold border border-white/20 shadow-lg"
-              >
+              <button onClick={toggleMusic} className="flex items-center gap-2 px-6 py-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-sm font-bold border border-white/20 shadow-lg">
                 {isPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 {isPlaying ? "Pausar Melodía" : "Reproducir Melodía"}
               </button>
@@ -198,17 +180,14 @@ const App: React.FC = () => {
           )}
         </header>
 
-        {!isCelebrationDay && <CountdownTimer timeLeft={timeLeft} />}
-
-        <h2 className="text-xl md:text-2xl font-light text-gray-200 mt-4 tracking-wide">
-          {getStatusMessage()}
-        </h2>
-
+        {!(isChristmas || isNewYearDay) && <CountdownTimer timeLeft={timeLeft} />}
+        <h2 className="text-xl md:text-2xl font-light text-gray-200 mt-4 tracking-wide">{getStatusMessage()}</h2>
         {!isNewYearPending && !isNewYearDay && <SurpriseSection currentDate={currentDate} />}
       </main>
 
-      <footer className="z-10 py-6 text-white/40 text-xs text-center">
-        Versión App 1.2 • Espíritu Navideño
+      <footer className="z-10 py-6 flex flex-col items-center gap-2">
+        <p className="text-white/40 text-[10px] uppercase tracking-widest">App Versión 1.3 • io.github.zamitiz.adn</p>
+        <a href="privacy.html" className="text-white/60 hover:text-xmas-gold text-xs underline decoration-white/20">Política de Privacidad</a>
       </footer>
 
       <DebugControls onSimulate={setSimulatedDate} currentSimulatedDate={simulatedDate} />
