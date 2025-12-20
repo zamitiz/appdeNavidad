@@ -186,7 +186,6 @@ const App: React.FC = () => {
       </main>
 
       <footer className="z-10 py-6 flex flex-col items-center gap-2">
-        <p className="text-white/40 text-[10px] uppercase tracking-widest">App Versión 1.3 • io.github.zamitiz.adn</p>
         <a href="privacy.html" className="text-white/60 hover:text-xmas-gold text-xs underline decoration-white/20">Política de Privacidad</a>
       </footer>
 
